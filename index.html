@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trợ lý Văn học AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    
+    <!-- Thư viện chuyển Markdown sang HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        /* --- CÀI ĐẶT GIAO DIỆN NÂNG CẤP --- */
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary-color: #f8fafc;
+            --text-color: #1e293b;
+            --text-light: #475569;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --card-hover-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --success-color: #16a34a;
+            --danger-color: #dc2626;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 2.8em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.15em;
+            color: var(--text-light);
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px 35px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        h2 {
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.6em;
+            font-weight: 700;
+        }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: #fdfdff;
+            font-family: 'Lora', serif;
+            font-size: 18px;
+            line-height: 1.7;
+            margin-top: 10px;
+            min-height: 150px;
+            resize: vertical;
+            transition: all 0.2s ease-in-out;
+            color: var(--text-color);
+        }
+
+        textarea::placeholder {
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            margin-top: 0;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        button:disabled {
+            background: #93c5fd;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        button.btn-secondary {
+            background: #fff;
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+        }
+
+        button.btn-secondary:hover:not(:disabled) {
+            background-color: #f8fafc;
+            border-color: var(--primary-color);
+            box-shadow: none;
+            transform: translateY(0);
+        }
+        
+        .timer-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .timer-controls label {
+            font-weight: 500;
+            color: var(--text-light);
+        }
+        
+        .timer-controls input[type="number"] {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            width: 80px;
+            font-size: 16px;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .timer-display {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--danger-color);
+            background: #fee2e2;
+            padding: 5px 20px;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
+        }
+
+        .result-box-container {
+            margin-top: 25px;
+        }
+
+        .result-box-container h3 {
+             font-size: 1.2em;
+             color: var(--text-color);
+             margin-bottom: 10px;
+        }
+
+        .result-box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            margin-top: 0;
+            border-radius: 12px;
+            white-space: normal; /* Đổi từ pre-wrap để HTML render đúng */
+            font-size: 16px;
+            line-height: 1.8;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .result-box strong, .result-box b {
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .result-box h1, .result-box h2, .result-box h3, .result-box h4 {
+            color: var(--text-color);
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-top: 20px;
+        }
+
+        .result-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-link {
+            background: none;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-top: 0;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-link.active {
+            color: var(--primary-color);
+            font-weight: 700;
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 25px 5px;
+        }
+
+        #lichSuList .history-item {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--success-color);
+            transition: all 0.3s ease;
+        }
+        #lichSuList .history-item:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transform: translateX(5px);
+            border-left-color: var(--primary-color);
+        }
+        #lichSuList .history-item strong {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        #lichSuList .history-item p {
+            margin: 5px 0 0;
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+        
+        .de-bai-display {
+            background-color: #f8fafc;
+            border: 1px dashed var(--border-color);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .de-bai-display h3 {
+            margin: 0 0 5px 0;
+            font-size: 1em;
+            color: var(--text-light);
+        }
+        .de-bai-display p {
+            margin: 0;
+            font-style: italic;
+            color: var(--text-color);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            header h1 {
+                font-size: 2.2em;
+            }
+            .card {
+                padding: 20px;
+            }
+            .timer-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Trợ lý Văn học AI 📝</h1>
+            <p>Phân tích đề, chấm bài và nhận góp ý từ Trí tuệ nhân tạo</p>
+        </header>
+
+        <main>
+            <!-- Bước 1: Nhập đề bài -->
+            <section id="de-bai-section" class="card">
+                <h2>1. Đề bài</h2>
+                <textarea id="deBaiInput" placeholder="Nhập đề bài văn của bạn ở đây..."></textarea>
+                <div class="button-group">
+                    <button id="phanTichBtn">Phân tích đề</button>
+                    <button id="vietBaiBtn" class="btn-secondary">Viết bài ngay</button>
+                </div>
+                <div id="phanTichOutput" class="result-box-container" style="display:none;">
+                    <h3>Gợi ý từ AI:</h3>
+                    <div class="result-box" id="phanTichResult"></div>
+                </div>
+            </section>
+
+            <!-- Bước 2: Viết bài (Ẩn ban đầu) -->
+            <section id="viet-bai-section" class="card" style="display:none;">
+                <h2>2. Bài làm của bạn</h2>
+                <div class="de-bai-display">
+                    <h3>Đề bài:</h3>
+                    <p id="deBaiDisplayTrongBaiViet"></p>
+                </div>
+                <div class="timer-controls">
+                    <label for="thoiGianInput">Thời gian (phút):</label>
+                    <input type="number" id="thoiGianInput" value="90" min="5">
+                    <button id="batDauBtn">Bắt đầu</button>
+                    <div id="dongHo" class="timer-display">00:00:00</div>
+                </div>
+                <textarea id="baiVietInput" placeholder="Viết bài của bạn ở đây..." disabled></textarea>
+                <button id="nopBaiBtn" disabled>Nộp bài & Chấm điểm</button>
+            </section>
+
+            <!-- Bước 3: Kết quả (Ẩn ban đầu) -->
+            <section id="ket-qua-section" class="card" style="display:none;">
+                <h2>3. Báo cáo từ AI</h2>
+                <div class="result-tabs">
+                    <button class="tab-link active" onclick="openTab(event, 'phan-tich-tab')">Chấm điểm & Phân tích</button>
+                    <button class="tab-link" onclick="openTab(event, 'viet-lai-tab')">Bài viết tham khảo</button>
+                </div>
+
+                <div id="phan-tich-tab" class="tab-content" style="display: block;">
+                    <div class="result-box" id="ketQuaChamOutput"></div>
+                </div>
+
+                <div id="viet-lai-tab" class="tab-content">
+                    <div class="result-box" id="baiVietMauOutput"></div>
+                    <button id="taoBaiMauBtn">Tạo bài viết tham khảo</button>
+                </div>
+                <!-- THÊM NÚT VIẾT BÀI MỚI -->
+                <button id="vietBaiMoiBtn" class="btn-secondary" style="margin-top: 20px;">Viết bài mới</button>
+            </section>
+            
+            <!-- Lịch sử làm bài -->
+            <section id="lich-su-section" class="card">
+                <h2>Lịch sử làm bài</h2>
+                <div id="lichSuList">
+                    <p>Chưa có bài nào được lưu.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- CÀI ĐẶT BAN ĐẦU ---
+        const API_KEY = 'AIzaSyDlPnfS3nMCh8aLIRI_JfTgrfNhwboIsnw';
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+
+        // Lấy các phần tử trên trang web
+        const deBaiSection = document.getElementById('de-bai-section');
+        const vietBaiSection = document.getElementById('viet-bai-section');
+        const ketQuaSection = document.getElementById('ket-qua-section');
+        const lichSuSection = document.getElementById('lich-su-section');
+
+        const deBaiInput = document.getElementById('deBaiInput');
+        const phanTichBtn = document.getElementById('phanTichBtn');
+        const vietBaiBtn = document.getElementById('vietBaiBtn');
+        const phanTichOutputContainer = document.getElementById('phanTichOutput');
+        const phanTichResult = document.getElementById('phanTichResult');
+
+        const deBaiDisplayTrongBaiViet = document.getElementById('deBaiDisplayTrongBaiViet');
+        const thoiGianInput = document.getElementById('thoiGianInput');
+        const batDauBtn = document.getElementById('batDauBtn');
+        const dongHo = document.getElementById('dongHo');
+        const baiVietInput = document.getElementById('baiVietInput');
+        const nopBaiBtn = document.getElementById('nopBaiBtn');
+
+        const ketQuaChamOutput = document.getElementById('ketQuaChamOutput');
+        const baiVietMauOutput = document.getElementById('baiVietMauOutput');
+        const taoBaiMauBtn = document.getElementById('taoBaiMauBtn');
+        const vietBaiMoiBtn = document.getElementById('vietBaiMoiBtn'); // Lấy nút mới
+
+        const lichSuList = document.getElementById('lichSuList');
+
+        let timerInterval;
+        let thoiGianConLai;
+        let currentHistoryId = null;
+
+        // --- CÁC HÀM XỬ LÝ CHÍNH ---
+
+        async function goiAI(prompt, button, outputElement, loadingMessage) {
+            const originalButtonText = button ? button.textContent : '';
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'AI đang xử lý...';
+            }
+            if (outputElement) {
+                outputElement.innerHTML = `<p>${loadingMessage || 'Đang tải...'}</p>`;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 1,
+                            topP: 1,
+                            maxOutputTokens: 8192,
+                        },
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error.message || `Lỗi HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts) {
+                    const text = data.candidates[0].content.parts[0].text;
+                    // Chuyển Markdown sang HTML trước khi hiển thị
+                    if (outputElement) {
+                        outputElement.innerHTML = marked.parse(text);
+                    }
+                    return text; // Trả về text gốc để lưu
+                } else {
+                    const reason = data.candidates?.[0]?.finishReason || "Không rõ";
+                    throw new Error(`Không nhận được phản hồi hợp lệ từ AI. Lý do: ${reason}`);
+                }
+
+            } catch (error) {
+                console.error("Lỗi khi gọi API Trí tuệ nhân tạo:", error);
+                const errorMessage = `Đã xảy ra lỗi: ${error.message}. Vui lòng kiểm tra lại API Key và kết nối mạng.`;
+                if (outputElement) outputElement.innerHTML = errorMessage;
+                return null;
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalButtonText;
+                }
+            }
+        }
+
+        async function phanTichDeBai() {
+            const deBai = deBaiInput.value.trim();
+            if (!deBai) {
+                alert("Vui lòng nhập đề bài!");
+                return;
+            }
+            phanTichOutputContainer.style.display = 'block';
+            const prompt = `Với vai trò là một giáo viên Ngữ Văn, hãy phân tích đề bài sau: "${deBai}". Làm rõ: yêu cầu chính, phạm vi kiến thức, và gợi ý dàn ý chi tiết (Mở, Thân, Kết). Trình bày bằng Markdown.`;
+            await goiAI(prompt, phanTichBtn, phanTichResult, "AI đang phân tích...");
+        }
+
+        function hienThiPhanVietBai() {
+            const deBai = deBaiInput.value.trim();
+            if (!deBai) {
+                alert("Vui lòng nhập đề bài trước khi viết!");
+                return;
+            }
+            deBaiSection.style.display = 'none';
+            lichSuSection.style.display = 'none';
+            ketQuaSection.style.display = 'none';
+            
+            deBaiDisplayTrongBaiViet.innerText = deBai;
+            vietBaiSection.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function batDauLamBai() {
+            const thoiGianPhut = parseInt(thoiGianInput.value);
+            if (isNaN(thoiGianPhut) || thoiGianPhut <= 0) {
+                alert("Vui lòng nhập thời gian hợp lệ.");
+                return;
+            }
+            thoiGianConLai = thoiGianPhut * 60;
+            capNhatDongHo();
+            baiVietInput.disabled = false;
+            nopBaiBtn.disabled = false;
+            batDauBtn.disabled = true;
+            thoiGianInput.disabled = true;
+            baiVietInput.focus();
+            timerInterval = setInterval(() => {
+                thoiGianConLai--;
+                capNhatDongHo();
+                if (thoiGianConLai <= 0) {
+                    dongHo.textContent = "HẾT GIỜ!";
+                    dongHo.style.color = 'red';
+                    clearInterval(timerInterval);
+                    alert("Đã hết giờ! Bài của bạn sẽ được tự động nộp.");
+                    nopBai();
+                }
+            }, 1000);
+        }
+        
+        function capNhatDongHo() {
+            if (thoiGianConLai < 0) return;
+            const hours = Math.floor(thoiGianConLai / 3600);
+            const minutes = Math.floor((thoiGianConLai % 3600) / 60);
+            const seconds = thoiGianConLai % 60;
+            dongHo.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        async function nopBai() {
+            clearInterval(timerInterval);
+            const deBai = deBaiInput.value.trim();
+            const baiViet = baiVietInput.value.trim();
+            if (!baiViet) {
+                alert("Bạn chưa viết bài làm.");
+                return;
+            }
+            
+            const promptChamDiem = `Bạn là một giáo viên Ngữ Văn chuyên nghiệp. Hãy chấm bài viết sau theo thang điểm 100. **Đề bài:** ${deBai}. **Bài làm của học sinh:** ${baiViet}. **YÊU CẦU BÁO CÁO (dùng markdown):** 1. **ĐIỂM SỐ (Thang 100):**. 2. **PHÂN TÍCH CHI TIẾT:** (Ưu điểm, Nhược điểm). 3. **SỬA LỖI CỤ THỂ:** (Trích dẫn và sửa 3-5 lỗi). 4. **NHẬN XÉT CHUNG VÀ LỜI KHUYÊN:**`;
+
+            const ketQuaChamMarkdown = await goiAI(promptChamDiem, nopBaiBtn, ketQuaChamOutput, "AI đang chấm điểm...");
+
+            if (ketQuaChamMarkdown) {
+                vietBaiSection.style.display = 'none';
+                ketQuaSection.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                baiVietMauOutput.innerHTML = '';
+                taoBaiMauBtn.style.display = 'block';
+
+                const data = {
+                    id: Date.now(),
+                    deBai,
+                    baiViet,
+                    ketQuaCham: ketQuaChamMarkdown, // Lưu dạng markdown
+                    baiMau: null,
+                    timestamp: new Date().toLocaleString('vi-VN')
+                };
+                currentHistoryId = data.id;
+                luuVaoLichSu(data);
+                hienThiLichSu();
+            }
+        }
+
+        async function taoBaiVietMau() {
+            const deBai = deBaiInput.value.trim();
+            if (!deBai) {
+                alert("Không tìm thấy đề bài để tạo bài mẫu.");
+                return;
+            }
+            const promptVietLai = `Dựa vào đề bài: "${deBai}", hãy viết một bài văn hoàn chỉnh, xuất sắc như một học sinh giỏi để làm bài mẫu tham khảo. Trình bày bằng Markdown.`;
+            
+            taoBaiMauBtn.style.display = 'none';
+            const baiMauMarkdown = await goiAI(promptVietLai, null, baiVietMauOutput, "AI đang viết bài mẫu tham khảo...");
+
+            if (baiMauMarkdown && currentHistoryId) {
+                let lichSu = layLichSu();
+                const itemIndex = lichSu.findIndex(item => item.id === currentHistoryId);
+                if (itemIndex > -1) {
+                    lichSu[itemIndex].baiMau = baiMauMarkdown; // Lưu dạng markdown
+                    localStorage.setItem('vanHocHistory', JSON.stringify(lichSu));
+                }
+            } else if (!baiMauMarkdown) {
+                taoBaiMauBtn.style.display = 'block';
+            }
+        }
+        
+        // --- HÀM MỚI ĐỂ RESET ỨNG DỤNG ---
+        function resetApp() {
+            // Hiển thị lại các khu vực ban đầu
+            deBaiSection.style.display = 'block';
+            lichSuSection.style.display = 'block';
+
+            // Ẩn các khu vực khác
+            vietBaiSection.style.display = 'none';
+            ketQuaSection.style.display = 'none';
+
+            // Xóa nội dung các ô nhập
+            deBaiInput.value = '';
+            baiVietInput.value = '';
+
+            // Xóa các kết quả đã hiển thị
+            phanTichOutputContainer.style.display = 'none';
+            phanTichResult.innerHTML = '';
+            ketQuaChamOutput.innerHTML = '';
+            baiVietMauOutput.innerHTML = '';
+
+            // Kích hoạt lại các nút bấm
+            phanTichBtn.disabled = false;
+            vietBaiBtn.disabled = false;
+            deBaiInput.disabled = false;
+            
+            // Reset đồng hồ
+            clearInterval(timerInterval);
+            dongHo.textContent = "00:00:00";
+            dongHo.style.color = 'var(--danger-color)';
+
+            // Cuộn lên đầu trang
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- XỬ LÝ LOCAL STORAGE VÀ LỊCH SỬ ---
+        function layLichSu() {
+            return JSON.parse(localStorage.getItem('vanHocHistory')) || [];
+        }
+
+        function luuVaoLichSu(data) {
+            let lichSu = layLichSu();
+            const itemIndex = lichSu.findIndex(item => item.id === data.id);
+            if (itemIndex > -1) {
+                lichSu[itemIndex] = data;
+            } else {
+                lichSu.unshift(data);
+            }
+            if (lichSu.length > 20) lichSu.pop();
+            localStorage.setItem('vanHocHistory', JSON.stringify(lichSu));
+        }
+
+        function hienThiLichSu() {
+            lichSuList.innerHTML = '';
+            const lichSu = layLichSu();
+            if (lichSu.length === 0) {
+                lichSuList.innerHTML = '<p>Chưa có bài nào được lưu.</p>';
+                return;
+            }
+            lichSu.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'history-item';
+                itemEl.innerHTML = `<strong>Đề: ${item.deBai.substring(0, 80)}...</strong><p><em>Làm lúc: ${item.timestamp}</em></p>`;
+                itemEl.onclick = () => taiLaiTuLichSu(item.id);
+                lichSuList.appendChild(itemEl);
+            });
+        }
+
+        function taiLaiTuLichSu(id) {
+            const lichSu = layLichSu();
+            const item = lichSu.find(i => i.id === id);
+            if (item) {
+                currentHistoryId = item.id;
+                deBaiInput.value = item.deBai;
+                baiVietInput.value = item.baiViet;
+                
+                deBaiSection.style.display = 'none';
+                lichSuSection.style.display = 'none';
+                vietBaiSection.style.display = 'none'; // Ẩn luôn phần viết bài
+                ketQuaSection.style.display = 'block'; // Chỉ hiện kết quả
+                
+                ketQuaChamOutput.innerHTML = marked.parse(item.ketQuaCham);
+
+                if (item.baiMau) {
+                    baiVietMauOutput.innerHTML = marked.parse(item.baiMau);
+                    taoBaiMauBtn.style.display = 'none';
+                } else {
+                    baiVietMauOutput.innerHTML = '';
+                    taoBaiMauBtn.style.display = 'block';
+                }
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        window.openTab = function(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // --- GẮN CÁC SỰ KIỆN VÀO NÚT BẤM ---
+        phanTichBtn.addEventListener('click', phanTichDeBai);
+        vietBaiBtn.addEventListener('click', hienThiPhanVietBai);
+        batDauBtn.addEventListener('click', batDauLamBai);
+        nopBaiBtn.addEventListener('click', nopBai);
+        taoBaiMauBtn.addEventListener('click', taoBaiVietMau);
+        vietBaiMoiBtn.addEventListener('click', resetApp); // Gắn sự kiện cho nút mới
+        
+        // --- KHỞI TẠO ỨNG DỤNG ---
+        hienThiLichSu();
+    });
+    </script>
+</body>
+</html>
